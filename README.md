@@ -18,6 +18,27 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Grounded assistant
+
+Ask Saral uses Azure OpenAI's Responses API with a configurable deployment. The recommended model is `gpt-5.4-mini`. Retrieval runs over the approved bilingual form schemas, document requirements, eligibility prompts, service instructions, verification metadata, and official URLs in this repository.
+
+The model can call only three read-only tools:
+
+- `search_official_guidance`
+- `get_form_context`
+- `check_preparation_status`
+
+The browser sends the question, selected service, field IDs, document IDs, and completion state. It does not send entered form values. Responses use `store: false`, and unsupported answers are marked as not grounded.
+
+Copy the names from `.env.example` into `.env.local` and configure:
+
+```bash
+AZURE_OPENAI_ENDPOINT=https://YOUR-RESOURCE-NAME.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=gpt-5.4-mini
+```
+
+For local API-key authentication, set `AZURE_OPENAI_API_KEY` in `.env.local`. Do not expose it through a `NEXT_PUBLIC_` variable. When the key is omitted, the server uses `DefaultAzureCredential`; in Azure, assign its managed identity permission to invoke the model deployment.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
