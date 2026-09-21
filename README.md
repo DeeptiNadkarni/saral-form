@@ -1,4 +1,4 @@
-##Saral Form - Your intelligent form assistant
+## Saral Form - Your intelligent form assistant
 
 
 Saral Form helps people understand and prepare Indian government applications in clear English or Hindi. It explains difficult questions, shows the information and documents needed, checks readiness, and directs the user to the correct official government portal for final submission.
