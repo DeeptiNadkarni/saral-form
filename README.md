@@ -1,13 +1,21 @@
 ## Saral Form - Your intelligent form assistant
 
 
-Saral Form helps people understand and prepare Indian government applications in clear English or Hindi. It explains difficult questions, shows the information and documents needed, checks readiness, and directs the user to the correct official government portal for final submission.
+Saral Form helps people understand and prepare Indian government applications in clear English or Hindi. 
+
+It explains difficult questions, shows the information and documents needed, checks readiness, and directs the user to the correct official government portal for final submission.
+
 The website currently supports
     •  Voter registration through Form 6
+    
     •  Fresh and re-issued passport preparation
+    
     •  New PAN applications and PAN corrections
+    
     •  Income, caste, and domicile certificate preparation
+    
     •  National scholarship application preparation
+    
 Saral Form is a preparation service, not a government portal. It does not submit applications, approve eligibility, make payments, book appointments, or change government records.
 
 
