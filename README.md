@@ -6,6 +6,7 @@ Saral Form helps people understand and prepare Indian government applications in
 It explains difficult questions, shows the information and documents needed, checks readiness, and directs the user to the correct official government portal for final submission.
 
 The website currently supports
+
     •  Voter registration through Form 6
     
     •  Fresh and re-issued passport preparation
