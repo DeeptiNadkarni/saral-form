@@ -4,7 +4,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getFormContext, searchOfficialGuidance } from "@/utils/assistantRetrieval";
-import { assistantRequestSchema } from "@/utils/assistantTypes";
+import { assistantRequestSchema, type AssistantCitation } from "@/utils/assistantTypes";
 
 export const runtime = "nodejs";
 
@@ -16,6 +16,15 @@ const assistantOutputSchema = z.object({
 
 const searchArgsSchema = z.object({ query: z.string().trim().min(1).max(300) });
 const emptyArgsSchema = z.object({});
+
+function uniqueCitations(items: AssistantCitation[]): AssistantCitation[] {
+  const urls = new Set<string>();
+  return items.filter((item) => {
+    if (urls.has(item.url)) return false;
+    urls.add(item.url);
+    return true;
+  });
+}
 
 const tools: OpenAI.Responses.Tool[] = [
   {
@@ -65,7 +74,7 @@ export async function POST(request: Request) {
 
   const context = parsedRequest.data;
   const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-5.4-mini";
-  const citations = new Map<string, ReturnType<typeof searchOfficialGuidance>[number]["citation"]>();
+  const citations = new Map<string, AssistantCitation>();
   const toolsUsed = new Set<string>();
   let input: OpenAI.Responses.ResponseInput = [
     {
@@ -101,7 +110,12 @@ export async function POST(request: Request) {
           output = results.map(({ id, kind, title, content, citation }) => ({ id, kind, title, content, citation }));
         } else if (call.name === "get_form_context") {
           emptyArgsSchema.parse(JSON.parse(call.arguments));
-          output = getFormContext(context.serviceId);
+          const formContext = getFormContext(context.serviceId);
+          formContext?.officialSources.forEach((source, index) => {
+            const citation = { id: `${context.serviceId}-official-source-${index}`, label: source.title, url: source.url };
+            citations.set(citation.id, citation);
+          });
+          output = formContext;
         } else if (call.name === "check_preparation_status") {
           emptyArgsSchema.parse(JSON.parse(call.arguments));
           output = {
@@ -141,10 +155,14 @@ export async function POST(request: Request) {
 
     if (!finalResponse.output_parsed) throw new Error("The model did not return a structured answer.");
     const result = finalResponse.output_parsed;
+    const selectedCitations = uniqueCitations(result.citationIds.flatMap((id) => citations.get(id) ?? []));
+    const responseCitations = selectedCitations.length > 0
+      ? selectedCitations
+      : uniqueCitations([...citations.values()]).slice(0, 5);
     return NextResponse.json({
       answer: result.answer,
-      citations: result.citationIds.flatMap((id) => citations.get(id) ?? []),
-      grounded: result.grounded && result.citationIds.some((id) => citations.has(id)),
+      citations: responseCitations,
+      grounded: result.grounded && responseCitations.length > 0,
       toolsUsed: [...toolsUsed],
     });
   } catch (error) {
