@@ -1,79 +1,96 @@
-## Saral Form - Your intelligent form assistant
+# Saral Form
 
+Saral Form is a bilingual English/Hindi assistant for understanding and preparing Indian government applications. It explains questions, tracks readiness, identifies required documents, and directs users to the appropriate official portal for final submission.
 
-Saral Form helps people understand and prepare Indian government applications in clear English or Hindi. 
+**Live website:** [https://app-saral-form-dev-7d3f.azurewebsites.net](https://app-saral-form-dev-7d3f.azurewebsites.net)
 
-It explains difficult questions, shows the information and documents needed, checks readiness, and directs the user to the correct official government portal for final submission.
+Saral Form is a preparation service, not a government portal. It does not submit applications, approve eligibility, make payments, book appointments, or modify government records.
 
-The website currently supports
+## Supported services
 
-    •  Voter registration through Form 6
-    
-    •  Fresh and re-issued passport preparation
-    
-    •  New PAN applications and PAN corrections
-    
-    •  Income, caste, and domicile certificate preparation
-    
-    •  National scholarship application preparation
-    
-Saral Form is a preparation service, not a government portal. It does not submit applications, approve eligibility, make payments, book appointments, or change government records.
+- Voter registration through Form 6
+- Fresh and re-issued passport preparation
+- New PAN applications and PAN corrections
+- Income, caste, and domicile certificate preparation
+- National scholarship application preparation
 
+## Features
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result - will soon be developing the hosted website - stay tuned!
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Guided bilingual forms with eligibility and readiness checks
+- Grounded bilingual AI assistant backed by approved guidance and official links
+- Automatic browser-local OCR for PDF, JPG, and PNG documents
+- PDF OCR for up to 10 pages with page-separated text previews
+- Local comparison of extracted text with prepared form values
+- No document uploads to the server; OCR runs entirely in the browser
+- Printable summaries, QR handoff, and links to official submission portals
 
 ## Grounded assistant
 
-Ask Saral uses Azure OpenAI's Responses API with a configurable deployment. The recommended model is `gpt-5.4-mini`. Retrieval runs over the approved bilingual form schemas, document requirements, eligibility prompts, service instructions, verification metadata, and official URLs in this repository.
-
-The model can call only three read-only tools:
+Ask Saral uses the Azure OpenAI Responses API and the `gpt-5.4-mini` deployment. The model can call only three bounded, read-only tools:
 
 - `search_official_guidance`
 - `get_form_context`
 - `check_preparation_status`
 
-The browser sends the question, selected service, field IDs, document IDs, and completion state. It does not send entered form values. Responses use `store: false`, and unsupported answers are marked as not grounded.
+The browser sends the question, selected service, field and document IDs, and completion state. It does not send entered form values. Responses use `store: false`; unsupported answers are marked as not grounded.
 
-Copy the names from `.env.example` into `.env.local` and configure:
+In Azure, the App Service system-assigned managed identity has the `Cognitive Services OpenAI User` role. For local development, `DefaultAzureCredential` is used unless `AZURE_OPENAI_API_KEY` is configured.
+
+## Local development
+
+Requirements:
+
+- Node.js 22
+- npm
+- Azure credentials with model access, or an Azure OpenAI API key
+
+Install dependencies and start the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+Copy `.env.example` to `.env.local` and configure:
 
 ```bash
 AZURE_OPENAI_ENDPOINT=https://YOUR-RESOURCE-NAME.openai.azure.com
 AZURE_OPENAI_DEPLOYMENT=gpt-5.4-mini
 ```
 
-For local API-key authentication, set `AZURE_OPENAI_API_KEY` in `.env.local`. Do not expose it through a `NEXT_PUBLIC_` variable. When the key is omitted, the server uses `DefaultAzureCredential`; in Azure, assign its managed identity permission to invoke the model deployment.
+For local API-key authentication, also set `AZURE_OPENAI_API_KEY`. Never expose it through a `NEXT_PUBLIC_` variable.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Validate a production build with:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Azure deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The deployed environment uses:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Azure App Service for the Next.js application
+- Azure OpenAI with `gpt-5.4-mini` version `2026-03-17`
+- System-assigned managed identity and resource-scoped RBAC
+- Azure Key Vault with RBAC authorization
+- Application Insights and Log Analytics
+- HTTPS-only transport with TLS 1.2 minimum
 
-## Deploy on Vercel
+Subscription-scoped modular Bicep is available under `infra/`. Validate it with:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+az bicep build --file infra/main.bicep
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The checked-in parameter file contains non-secret deployment settings. `deployerObjectId` must be supplied explicitly during deployment; no credentials or local deployment-session artifacts are committed.
+
+## Technology
+
+- Next.js 16 and React 19
+- TypeScript
+- Tesseract.js and PDF.js for local OCR
+- OpenAI JavaScript SDK and Azure Identity
+- Bicep for Azure infrastructure

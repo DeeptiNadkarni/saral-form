@@ -50,7 +50,7 @@ export default function ApplicationReadiness({ locale, questions, answers, onAns
     warning: "Warning", notice: "Check",
     documents: "Local document checks", documentsNote: "Optional preparation check. PDF, JPG, or PNG up to 5 MB. Files never leave this browser.", choose: "Check a file", replace: "Check another file",
     possess: "I have this document", fileChecked: "File inspected", remove: "Remove file", alternatives: "Possible alternatives", pages: "Pages to include", issuer: "Issuer", expiry: "Expiry", pagesConfirmed: "Required pages included",
-    runOcr: "Run local OCR", ocrRunning: "Reading locally", ocrNote: "Optional and advisory. OCR runs in this browser; its language model may be downloaded. No authenticity check is performed.", ocrMatches: "prepared values found", extracted: "Extracted text preview", confidence: "OCR confidence",
+    runOcr: "Run local OCR again", ocrRunning: "Reading locally", ocrNote: "OCR starts automatically for PDF, JPG, and PNG files. PDFs are read locally up to 10 pages. No authenticity check is performed.", ocrMatches: "prepared values found", ocrNoMatches: "Text was extracted, but none of the values currently entered in the form were found.", extracted: "Extracted text preview", confidence: "OCR confidence",
   } : {
     title: "आवेदन तैयारी", intro: "समीक्षा से पहले पात्रता, प्रमाण और वर्तमान जमा मार्गदर्शन जाँचें।",
     eligibility: "पात्रता पूर्व-जाँच", eligibilityNote: "यह मार्गदर्शन है, आधिकारिक पात्रता निर्णय नहीं।", yes: "हाँ", no: "नहीं",
@@ -61,7 +61,20 @@ export default function ApplicationReadiness({ locale, questions, answers, onAns
     warning: "चेतावनी", notice: "जाँचें",
     documents: "स्थानीय दस्तावेज़ जाँच", documentsNote: "वैकल्पिक तैयारी जाँच। 5 MB तक PDF, JPG या PNG। फ़ाइलें इस ब्राउज़र से बाहर नहीं जातीं।", choose: "फ़ाइल जाँचें", replace: "दूसरी फ़ाइल जाँचें",
     possess: "यह दस्तावेज़ मेरे पास है", fileChecked: "फ़ाइल जाँची गई", remove: "फ़ाइल हटाएँ", alternatives: "संभावित विकल्प", pages: "शामिल किए जाने वाले पृष्ठ", issuer: "जारीकर्ता", expiry: "समाप्ति", pagesConfirmed: "आवश्यक पृष्ठ शामिल हैं",
-    runOcr: "स्थानीय OCR चलाएँ", ocrRunning: "स्थानीय रूप से पढ़ा जा रहा है", ocrNote: "वैकल्पिक और सलाह मात्र। OCR इस ब्राउज़र में चलता है; इसका भाषा मॉडल डाउनलोड हो सकता है। प्रामाणिकता जाँच नहीं होती।", ocrMatches: "तैयार मान मिले", extracted: "निकाले गए टेक्स्ट का पूर्वावलोकन", confidence: "OCR विश्वसनीयता",
+    runOcr: "स्थानीय OCR फिर चलाएँ", ocrRunning: "स्थानीय रूप से पढ़ा जा रहा है", ocrNote: "PDF, JPG और PNG फ़ाइलों के लिए OCR अपने आप शुरू होता है। PDF के अधिकतम 10 पृष्ठ स्थानीय रूप से पढ़े जाते हैं। प्रामाणिकता जाँच नहीं होती।", ocrMatches: "तैयार मान मिले", ocrNoMatches: "टेक्स्ट निकाला गया, लेकिन फॉर्म में अभी दर्ज कोई मान नहीं मिला।", extracted: "निकाले गए टेक्स्ट का पूर्वावलोकन", confidence: "OCR विश्वसनीयता",
+  };
+
+  const runOcrForFile = async (documentId: string, file: File) => {
+    setOcrProgress((current) => ({ ...current, [documentId]: 0 }));
+    setOcrErrors((current) => ({ ...current, [documentId]: "" }));
+    try {
+      const result = await runLocalOcr(file, locale, formValues, (progress) => setOcrProgress((current) => ({ ...current, [documentId]: progress })));
+      setOcrResults((current) => ({ ...current, [documentId]: result }));
+    } catch (error) {
+      setOcrErrors((current) => ({ ...current, [documentId]: error instanceof Error ? error.message : "OCR failed" }));
+    } finally {
+      setOcrProgress((current) => { const next = { ...current }; delete next[documentId]; return next; });
+    }
   };
 
   const handleFile = async (documentId: string, file?: File) => {
@@ -69,6 +82,7 @@ export default function ApplicationReadiness({ locale, questions, answers, onAns
     setSelectedFiles((current) => ({ ...current, [documentId]: file }));
     setOcrResults((current) => { const next = { ...current }; delete next[documentId]; return next; });
     onInspection(documentId, await inspectDocument(file, locale));
+    if (file.type.startsWith("image/") || file.type === "application/pdf" || file.name.toLocaleLowerCase().endsWith(".pdf")) await runOcrForFile(documentId, file);
   };
 
   const handleRemove = (documentId: string) => {
@@ -81,16 +95,7 @@ export default function ApplicationReadiness({ locale, questions, answers, onAns
   const handleOcr = async (documentId: string) => {
     const file = selectedFiles[documentId];
     if (!file) return;
-    setOcrProgress((current) => ({ ...current, [documentId]: 0 }));
-    setOcrErrors((current) => ({ ...current, [documentId]: "" }));
-    try {
-      const result = await runLocalOcr(file, locale, formValues, (progress) => setOcrProgress((current) => ({ ...current, [documentId]: progress })));
-      setOcrResults((current) => ({ ...current, [documentId]: result }));
-    } catch (error) {
-      setOcrErrors((current) => ({ ...current, [documentId]: error instanceof Error ? error.message : "OCR failed" }));
-    } finally {
-      setOcrProgress((current) => { const next = { ...current }; delete next[documentId]; return next; });
-    }
+    await runOcrForFile(documentId, file);
   };
 
   return (
@@ -155,7 +160,7 @@ export default function ApplicationReadiness({ locale, questions, answers, onAns
                 <label className="pages-check"><input type="checkbox" checked={details.pagesConfirmed} onChange={(event) => onDocumentDetails(document.id, { ...details, pagesConfirmed: event.target.checked })} /> {t.pagesConfirmed}</label>
               </div>
               {inspection && <div className="inspection-file"><p><span>{inspection.name}</span><small>{(inspection.size / 1024 / 1024).toFixed(2)} MB{inspection.dimensions ? ` · ${inspection.dimensions.width} × ${inspection.dimensions.height}px` : ""}</small></p>{inspection.qualityNotes?.map((note) => <small key={note}><AlertTriangle size={11} /> {note}</small>)}<button type="button" onClick={() => handleRemove(document.id)}><Trash2 size={12} /> {t.remove}</button></div>}
-              {inspection && selectedFiles[document.id]?.type.startsWith("image/") && <div className="ocr-panel"><p>{t.ocrNote}</p><button type="button" disabled={progress !== undefined} onClick={() => handleOcr(document.id)}><ScanText size={13} /> {progress !== undefined ? `${t.ocrRunning} ${progress}%` : t.runOcr}</button>{ocrErrors[document.id] && <small className="ocr-error">{ocrErrors[document.id]}</small>}{ocrResult && <div className="ocr-result"><strong>{t.confidence}: {ocrResult.confidence}% · {ocrResult.matchedFields.length} {t.ocrMatches}</strong><details><summary>{t.extracted}</summary><pre>{ocrResult.text || "-"}</pre></details></div>}</div>}
+              {inspection && selectedFiles[document.id] && <div className="ocr-panel"><p>{t.ocrNote}</p><button type="button" disabled={progress !== undefined} onClick={() => handleOcr(document.id)}><ScanText size={13} /> {progress !== undefined ? `${t.ocrRunning} ${progress}%` : t.runOcr}</button>{ocrErrors[document.id] && <small className="ocr-error">{ocrErrors[document.id]}</small>}{ocrResult && <div className="ocr-result"><strong>{t.confidence}: {ocrResult.confidence}% · {ocrResult.matchedFields.length} {t.ocrMatches}</strong>{ocrResult.matchedFields.length === 0 && <small>{t.ocrNoMatches}</small>}<details key={ocrResult.text} open={ocrResult.matchedFields.length === 0 ? true : undefined}><summary>{t.extracted}</summary><pre>{ocrResult.text || "-"}</pre></details></div>}</div>}
             </div>;
           })}</div>
         </section>

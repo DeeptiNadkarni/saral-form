@@ -14,6 +14,7 @@
     "lucide-react": "^1.44.0",
     "next": "16.4.0-canary.25",
     "openai": "^7.15.0",
+    "pdfjs-dist": "^6.3.289",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "saral-form-dev-7d3f" },
+    "location": { "value": "southindia" },
+    "sessionId": { "value": "7d3f8437-5414-4517-8518-91bdd365f47f" },
+    "deployedBy": { "value": "azure-app-onboard" },
+    "createdAt": { "value": "2026-09-29T13:53:55.6338320+05:30" },
+    "resourceGroupName": { "value": "rg-saral-form-dev-7d3f" },
+    "appServicePlanName": { "value": "asp-saral-form-dev-7d3f" },
+    "appServiceName": { "value": "app-saral-form-dev-7d3f" },
+    "openAIAccountName": { "value": "ai-saral-form-dev-7d3f" },
+    "openAIDeploymentName": { "value": "gpt-5-4-mini" },
+    "logAnalyticsName": { "value": "log-saral-form-dev-7d3f" },
+    "appInsightsName": { "value": "appi-saral-form-dev-7d3f" },
+    "keyVaultName": { "value": "kv-saral-form-dev-7d3f" },
+    "appServicePlanSkuName": { "value": "B1" },
+    "appServicePlanSkuTier": { "value": "Basic" },
+    "appServicePlanCapacity": { "value": 1 },
+    "openAIAccountSkuName": { "value": "S0" },
+    "openAIDeploymentSkuName": { "value": "GlobalStandard" },
+    "openAIDeploymentCapacity": { "value": 10 },
+    "openAIModelName": { "value": "gpt-5.4-mini" },
+    "openAIModelVersion": { "value": "2026-03-17" },
+    "logAnalyticsSkuName": { "value": "PerGB2018" },
+    "keyVaultSkuName": { "value": "standard" }
+  }
+}

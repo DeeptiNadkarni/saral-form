@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local Azure deployment sessions
+.copilot-azure/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
